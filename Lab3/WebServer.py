@@ -38,8 +38,8 @@ header_type = {200 : "HTTP/1.1 200 OK\r\nAcept-Ranges: bytes\r\nKeep-Alive: time
                     404 : "HTTP/1.1 404 Not Found\r\nAcept-Ranges: bytes\r\nKeep-Alive: timeout=10, max=100\r\nConnection: " \
                     "Keep-Alive\r\nContent-Type: " \
                     "text/html\r\n\r\n",\
-                    "Not_Found_page":'<html><head><title>404 Not Found</title></head><body><h1>404 Not Found</h1> <p>The requested ' \
-			        'URL was not found on this server.</p></body></html>'}
+                    "NF_page_resource":'<html><head><title>Error!</title></head><body><h1>404 Not Found</h1> <p>The requested ' \
+			        'URL was not found.</p></body></html>'}
 
 # Using this function to chenge string to utf-8 bytes
 def change_bytes(key,header_type):
@@ -54,11 +54,12 @@ def change_bytes(key,header_type):
 ################################################################################################
 while True:
     connection_socket,address = [item for item in server_socket.accept()]
-    sentence = connection_socket.recv(2048).decode()
-    if sentence:
-        start_index = sentence.index("/")
-        end_index = sentence.index(" HTTP")
-        file_name = sentence[start_index + 1 : end_index]       
+    rcv_msg = connection_socket.recv(2048)
+    decode_sentence = rcv_msg.decode()
+    if decode_sentence:
+        start_index = decode_sentence.index("/")
+        end_index = decode_sentence.index(" HTTP")
+        file_name = decode_sentence[start_index + 1 : end_index]       
 ################################################################################################
 # Check whether the file is in the directory
 # Using the try-catch function
@@ -71,7 +72,7 @@ while True:
             get_file = open(file_name,'rb')
         except FileNotFoundError:
             connection_socket.send(change_bytes(404,header_type))
-            connection_socket.send(change_bytes("Not_Found_page",header_type))
+            connection_socket.send(change_bytes("NF_page_resource",header_type))
             print("Fail to get the request! T_T")
             # not found then close socket
             connection_socket.close()
@@ -100,6 +101,6 @@ while True:
             pic_encode = base64.b64encode(picture_content)
             # Picture with HTML tag ----> Show the picture
             connection_socket.send(b'<img src="data:image/jpg;base64,' + pic_encode + b'">')
-            print("Getting the request successfully")
+            print("Getting the request successfully! ^_^")
     # After getting the request, showing the content and clost socket
     connection_socket.close()
