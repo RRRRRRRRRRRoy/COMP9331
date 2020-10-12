@@ -1,3 +1,4 @@
+
 import base64
 import socket
 import time
@@ -11,7 +12,7 @@ import sys
 ################################################################################################
 if sys.version_info[0] >= 3:
     # print(f"The current version of Python is Python{sys.version_info[0]}")
-    print("Welcome! Server is starting ~ ")
+    print("Welcome to use WebServer!")
 elif sys.version_info[0] < 3:
     wrong_msg = "The current WebServer is written in Python3. Pls change the command"
     raise Exception(wrong_msg)
@@ -71,7 +72,7 @@ while True:
         except FileNotFoundError:
             connection_socket.send(change_bytes(404,header_type))
             connection_socket.send(change_bytes("Not_Found_page",header_type))
-            print("Getting the request Fail")
+            print("Fail to get the request! T_T")
             # not found then close socket
             connection_socket.close()
             continue
@@ -85,7 +86,7 @@ while True:
         if file_name == "index.html":
             file_content = get_file.read()
             connection_socket.send(file_content)
-            print("Getting the request successfully")
+            print("Getting the request successfully! ^_^")
 ################################################################################################
 # Second situation ------> showing picture
 # Use base64 to encode picture and show on the website
