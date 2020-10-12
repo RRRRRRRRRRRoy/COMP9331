@@ -33,4 +33,13 @@ while True:
     if sentence:
         start_index = sentence.index("/")
         end_index = sentence.index(" HTTP")
-        URL = sentence[start_index + 1 : end_index]
+        file_name = sentence[start_index + 1 : end_index]       
+        
+        try:
+            get_file = open(file_name,'rb')
+        except FileNotFoundError:
+            connection_socket.send(bytes(header_type[404],'utf-8'))
+            connection_socket.send(bytes(header_type["Not_Found_page"],'utf-8'))
+            connection_socket.close()
+
+    connection_socket.close()
