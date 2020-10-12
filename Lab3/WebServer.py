@@ -54,7 +54,7 @@ def change_bytes(key,header_type):
 ################################################################################################
 while True:
     connection_socket,address = [item for item in server_socket.accept()]
-    rcv_msg = connection_socket.recv(2048)
+    rcv_msg = connection_socket.recv(1024)
     decode_sentence = rcv_msg.decode()
     if decode_sentence:
         start_index = decode_sentence.index("/")
