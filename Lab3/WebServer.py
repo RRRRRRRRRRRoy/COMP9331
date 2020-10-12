@@ -3,13 +3,22 @@ import socket
 import time
 import sys
 
-if sys.version_info[0] < 3:
-    raise Exception("Please use Python3 file as the input!")
+################################################################################################
+# Get the current python version
+# Avoiding the version error auto-test in the school server
+# Using the sys.version_info[0] to check the current version
+# Source: https://stackoverflow.com/questions/52359805/is-sys-version-info-reliable-for-python-version-checking
+################################################################################################
+if sys.version_info[0] >= 3:
+    # print(f"The current version of Python is Python{sys.version_info[0]}")
+    print("Welcome! Server is starting ~ ")
+elif sys.version_info[0] < 3:
+    wrong_msg = "The current WebServer is written in Python3. Pls change the command"
+    raise Exception(wrong_msg)
 
 # get the IP address and server port
 # wrap them into a tuple
-server_port = int(sys.argv[1])
-IP_info = ('localhost',server_port)
+IP_info = ('localhost',int(sys.argv[1]))
 
 ################################################################################################
 # The same way like writing the PingClient
@@ -19,7 +28,7 @@ server_socket = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
 server_socket.bind(IP_info)
 server_socket.listen(1)
 # show the result in the terminal -----> Server is ready
-print("Server is ready!")
+print("Server is ready to receive request!")
 
 # Using the dictionary is easier than using String
 header_type = {200 : "HTTP/1.1 200 OK\r\nAcept-Ranges: bytes\r\nKeep-Alive: timeout=10, max=100\r\nConnection: " \
