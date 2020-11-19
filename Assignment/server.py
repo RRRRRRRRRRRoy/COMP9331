@@ -41,7 +41,7 @@ LST_server = list()
 encode_type = 'utf-8' 
 
 # Keywords_dict
-global Keywords_dict = {"to":"time_out",'sd':"shutting_down"}
+global Keywords_dict = {"to":"time_out",'sd':"shutting_down",'iu':"inuse","crt":'correct'}
 
 # wraping these function to check timeout and shutdown
 def check_timout_N_Shutdown(keyword):
@@ -50,6 +50,20 @@ def check_timout_N_Shutdown(keyword):
     connect_socket.send(encode_msg)
     connect_socket.close()
     close = True
+
+def Check_same(kind,string_Data):
+    space_index = string_Data.index(" ")
+    username = string_Data[0:space_index]
+    if kind == "username":
+        if username == "LOGIN_USERNAME".upper():
+            return True
+        else:
+            return False
+    elif kind == "password":
+        if username == "LOGIN_PASSWORD".upper():
+            return True
+        else:
+            return False
 
 
 # Usingt with open can omit the step of Writing Close
@@ -87,13 +101,8 @@ def client_connection(connection_socket, address):
         # if the server is shutdown, the SHUTDOWN will become True, Then into the if layer
         if SHUTDOWN:
             # If shutdown sending the client shuttding down key words to shutdown
-            # keyword = Keywords_dict['sd'].upper()
-            # encode_msg = keyword.encode(encode_type)
-            # connect_socket.send(encode_msg)
             # After seding the message close the connection
             # And Set the close flag to True
-            # connect_socket.close()
-            # close = True
             check_timout_N_Shutdown('sd')
             break
         # From 0 to 90 count the time 
@@ -120,9 +129,28 @@ def client_connection(connection_socket, address):
             # then print time out and sending the key words to the client
             else:
                 print("Time out!")
+                # check timeout
                 check_timout_N_Shutdown('to')
                 break
             # Avoding sending message after shutting down
             if SHUTDOWN:
+                # check shutdown
                 check_timout_N_Shutdown('sd')
-            break
+                break
+            
+            # Getting the username
+            # check string data string_Data
+            if Check_same('username',string_Data):
+            # if strData[:strData.index(" ")] == "LOGIN_USERNAME":
+                print("login_username")
+                space_index = string_Data.index(" ") 
+                string_Data = string_Data[space_index + 1:]
+                Username = string_Data
+                print("username:", Username)
+                if Username in current_client:
+                    msg_keyword = Keywords_dict["iu"]
+                    msg_keyword = msg_keyword.upper()
+                    msg_keyword = msg_keyword.encode()
+                    connect_socket.send(msg_keyword)
+                    continue
+                
