@@ -43,6 +43,6 @@ with open("credentials.txt") as file:
             # The format is : Username  Password
             # Slice the String and get username pwd
             U_name = line[:line.index(" ")]
-            U_pass = line[line.index(" ") + 1:]
+            U_password = line[line.index(" ") + 1:]
             # create them into a dictionary
-            client_dict[U_name] = U_pass
+            client_dict[U_name] = U_password
