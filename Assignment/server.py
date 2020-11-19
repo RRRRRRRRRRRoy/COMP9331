@@ -17,6 +17,12 @@ elif sys.version_info[0] < 3:
     wrong_msg = "The current Server file is written by Python3. Plz change the command and Try again!"
     raise Exception(wrong_msg)
 
+
+server_host = "localhost"
+server_port = int(sys.argv[1])
+address_info = (server_host,server_port)
+
+
 #############################################################################################
 ################   Get the User Data from Credentials.txt file  #############################
 #############################################################################################
@@ -41,7 +47,7 @@ LST_server = list()
 encode_type = 'utf-8' 
 
 # Keywords_dict
-global Keywords_dict = {"to":"time_out",'sd':"shutting_down",'iu':"inuse","crt":'correct'}
+global Keywords_dict = {"to":"time_out",'sd':"shutting_down",'iu':"inuse","crt":'correct',"scs":"success","icrt":"incorrect","nw":"new"}
 
 # wraping these function to check timeout and shutdown
 def check_timout_N_Shutdown(keyword):
@@ -78,7 +84,7 @@ with open("credentials.txt") as file:
             U_name = line[:line.index(" ")]
             U_password = line[line.index(" ") + 1:]
             # create them into a dictionary
-            client_dict[U_name] = U_password
+            client_dictionary[U_name] = U_password
 
 def client_connection(connection_socket, address):
     # change the previous the container to the global variable
@@ -150,7 +156,121 @@ def client_connection(connection_socket, address):
                 if Username in current_client:
                     msg_keyword = Keywords_dict["iu"]
                     msg_keyword = msg_keyword.upper()
-                    msg_keyword = msg_keyword.encode()
+                    msg_keyword = msg_keyword.encode(encode_type)
                     connect_socket.send(msg_keyword)
                     continue
-                
+                elif Username in client_dictionary.keys():
+                    msg_keyword = Keywords_dict["crt"]
+                    msg_keyword = msg_keyword.upper()
+                    msg_keyword = msg_keyword.encode(encode_type)
+                    connect_socket.send(msg_keyword)
+                    # This msg receive part is same as the previous part of recving msg
+                    for timer in range(0,recv_counter):
+                        try:
+                            string_Data_encode = connect_socket.recv(1024)
+                            string_Data = string_Data_encode.decode(encode_type)
+                            if not string_Data:
+                                continue
+                            else:
+                                break
+                        except socket.timeout:
+                            if not SHUTDOWN:
+                                continue
+                            else:
+                                break
+                    else:
+                        print("Time out!")
+                        check_timout_N_Shutdown('to')
+                        break
+                    if SHUTDOWN:
+                        check_timout_N_Shutdown('sd')
+                        break
+                    
+                    if Check_same("password",string_Data):
+                        space_index = string_Data.index(" ") 
+                        string_Data = string_Data[space_index + 1:]
+                        Password = string_Data
+                        print("password:", Password)
+                        if Password == client_dictionary[Username]:
+                            msg_keyword = Keywords_dict["scs"]
+                            msg_keyword = msg_keyword.upper()
+                            msg_keyword = msg_keyword.encode(encode_type)
+                            connect_socket.send(msg_keyword)
+                            print("Login success!")
+                            # avoiding conflict
+                            current_client.add(Username)
+                            break
+                        else:
+                            print("Incorrect!")
+                            msg_keyword = Keywords_dict["icrt"]
+                            msg_keyword = msg_keyword.upper()
+                            msg_keyword = msg_keyword.encode(encode_type)
+                            connect_socket.send(msg_keyword)
+
+                elif Username not in client_dictionary.keys():
+                    msg_keyword = Keywords_dict["nw"]
+                    msg_keyword = msg_keyword.upper()
+                    msg_keyword = msg_keyword.encode(encode_type)
+                    connect_socket.send(msg_keyword)
+                    for timer in range(0,recv_counter):
+                        # Avoiding exception
+                        try:
+                            string_Data_encode = connect_socket.recv(1024)
+                            string_Data = string_Data_encode.decode(encode_type)
+                            # check the data is empty or not 
+                            # empty ---> continue receive
+                            if not string_Data:
+                                continue
+                            else:
+                                # Getting the data already ----> break
+                                break
+                        except socket.timeout:
+                            # Check the shutdown of the server
+                            if not SHUTDOWN:
+                                continue
+                            else:
+                                break
+                        # After outof the range counter which is from 0-90
+                        # then print time out and sending the key words to the client
+                    else:
+                        print("Time out!")
+                        # check timeout
+                        check_timout_N_Shutdown('to')
+                        break
+                    # Avoding sending message after shutting down
+                    if SHUTDOWN:
+                        # check shutdown
+                        check_timout_N_Shutdown('sd')
+                        break
+        
+                    if Check_same('password',string_Data):
+                        space_index = string_Data.index(" ") 
+                        string_Data = string_Data[space_index + 1:]
+                        Password = string_Data
+                        print("password:", Password)
+                        with open("credentials.txt", "a") as fc:
+                            fc.write(f"{Username} {Password}\n")
+                        
+                        msg_keyword = Keywords_dict["scs"]
+                        msg_keyword = msg_keyword.upper()
+                        msg_keyword = msg_keyword.encode(encode_type)
+                        connect_socket.send(msg_keyword)
+                        print("Login success!")
+                        break
+                    # 登录成功后的操作
+
+
+
+
+# Create the Server with TCP
+# Source: https://stackoverflow.com/questions/48406991/basic-python-tcp-socket-server-client
+Serversocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+Serversocket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+Serversocket.bind(address_info)
+while True:
+    Serversocket.listen()
+    clientsocket, addr = Serversocket.accept()
+    threading.Thread(target=client_connection,
+                     args=(clientsocket, addr)).start()
+
+                    
